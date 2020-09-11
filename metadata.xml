@@ -1,8 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <metadata>
-	<name>!!!!! Callback Merger</name>
-	<directory>!!!!! callback merger</directory>
-	<description/>
-	<version>1.0</version>
-	<visibility/>
-</metadata>
+    <name>!!!!! Callback Merger</name>
+    <directory>!!!!! callback merger</directory>
+    <id>2225956656</id>
+    <description>This is a technical script for modders. However, subscribing to this as a regular user can be useful, as it can improve compatibility between mods.
 
+This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
+It also fixes a few bugs and implements a few QOL changes to the callbacks</description>
+    <version>1.1</version>
+    <visibility>Public</visibility>
+    <tag id="Lua"/>
+</metadata>
