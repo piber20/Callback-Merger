@@ -380,3 +380,8 @@ function CallbackMerger.RemoveCallback(mod, callbackId, fn)
 
 end
 Isaac.RemoveCallback = CallbackMerger.RemoveCallback
+
+------------
+-- return --
+------------
+return FilepathHelper
