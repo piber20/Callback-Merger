@@ -384,4 +384,4 @@ Isaac.RemoveCallback = CallbackMerger.RemoveCallback
 ------------
 -- return --
 ------------
-return FilepathHelper
+return CallbackMerger
