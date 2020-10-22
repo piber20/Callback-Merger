@@ -1,7 +1,7 @@
 ---------------------
 -- CALLBACK MERGER --
 ---------------------
--- Version 2
+-- Version 3
 -- Created by piber
 
 -- This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
@@ -73,7 +73,7 @@
 -------------
 -- version --
 -------------
-local fileVersion = 2
+local fileVersion = 3
 
 --prevent older/same version versions of this script from loading
 if CallbackMerger and CallbackMerger.Version >= fileVersion then
@@ -177,9 +177,22 @@ function CallbackMerger.RegisterMod(mod, modname, apiversion)
 	end
 	
 	if type(mod) == "table" then
+	
+		--check if the mod is already in the table
+		local modAlreadyRegistered = false
+		for i=1, #CallbackMerger.RegisteredMods do
+			
+			if CallbackMerger.RegisteredMods[i] == mod then
+				modAlreadyRegistered = true
+				break
+			end
+			
+		end
 		
 		--add mod to registered mods table
-		CallbackMerger.RegisteredMods[#CallbackMerger.RegisteredMods+1] = mod
+		if not modAlreadyRegistered then
+			CallbackMerger.RegisteredMods[#CallbackMerger.RegisteredMods+1] = mod
+		end
 	
 	end
 	
@@ -214,7 +227,23 @@ function CallbackMerger.AddCallback(mod, callbackId, fn, extraVar)
 		error("bad argument #3 to 'AddCallback' (function expected, got " .. type(fn) .. ")", 2)
 		
 	end
+
+	--check if the mod is already in the table
+	local modAlreadyRegistered = false
+	for i=1, #CallbackMerger.RegisteredMods do
+		
+		if CallbackMerger.RegisteredMods[i] == mod then
+			modAlreadyRegistered = true
+			break
+		end
+		
+	end
 	
+	--add mod to registered mods table
+	if not modAlreadyRegistered then
+		CallbackMerger.RegisteredMods[#CallbackMerger.RegisteredMods+1] = mod
+	end
+
 	--add the callback to the callbacks table
 	CallbackMerger.Callbacks[callbackId] = CallbackMerger.Callbacks[callbackId] or {}
 	table.insert(CallbackMerger.Callbacks[callbackId], {mod, fn, extraVar})
