@@ -1,7 +1,7 @@
 ---------------------
 -- CALLBACK MERGER --
 ---------------------
--- Version 3
+-- Version 4
 -- Created by piber
 
 -- This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
@@ -73,7 +73,7 @@
 -------------
 -- version --
 -------------
-local fileVersion = 3
+local fileVersion = 4
 
 --prevent older/same version versions of this script from loading
 if CallbackMerger and CallbackMerger.Version >= fileVersion then
@@ -298,9 +298,14 @@ function CallbackMerger.AddCallback(mod, callbackId, fn, extraVar)
 						
 							if registeredMod == dataMod then
 					
-								local returned = dataFunction(registeredMod, table.unpack(args))
+								--pcall to catch any errors
+								local noErrors, returned = pcall(dataFunction, registeredMod, table.unpack(args))
 								
-								if type(returned) ~= "nil" then
+								if not noErrors then
+								
+									error("[" .. tostring(dataMod.Name) .. "] " .. returned, 2)
+									
+								elseif type(returned) ~= "nil" then
 								
 									local doReturn = true
 									
