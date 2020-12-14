@@ -1,7 +1,7 @@
 ---------------------
 -- CALLBACK MERGER --
 ---------------------
--- Version 4
+-- Version 5
 -- Created by piber
 
 -- This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
@@ -34,6 +34,15 @@
 --	1 = dont ignore anything
 --	2 = ignore true for returning
 --	3 = ignore false for returning
+
+-- CallbackMerger.CallbackReturnPreventions
+-- table
+-- Used to determine if returning certain values would prevent later callbacks from being called
+-- Indexed by callback id, set to one of these:
+-- 0 = returning anything prevents later callbacks
+-- 1 = later callbacks happen regardless of what returns
+-- 2 = true prevents later callbacks
+-- 3 = false prevents later callbacks
 
 -- CallbackMerger.CallbackReturnToArg
 -- table
@@ -73,7 +82,7 @@
 -------------
 -- version --
 -------------
-local fileVersion = 4
+local fileVersion = 5
 
 --prevent older/same version versions of this script from loading
 if CallbackMerger and CallbackMerger.Version >= fileVersion then
@@ -82,6 +91,7 @@ if CallbackMerger and CallbackMerger.Version >= fileVersion then
 
 end
 
+local recreateCondensedCallbacks = false
 if not CallbackMerger then
 
 	CallbackMerger = {}
@@ -92,6 +102,14 @@ elseif CallbackMerger.Version < fileVersion then
 	local oldVersion = CallbackMerger.Version
 	
 	-- handle old versions
+	if oldVersion < 5 then
+	
+		--replace the condensed callbacks functions with new ones if some were created
+		if #CallbackMerger.CondensedCallbacks > 0 then
+			recreateCondensedCallbacks = true
+		end
+		
+	end
 
 	CallbackMerger.Version = fileVersion
 
@@ -107,50 +125,69 @@ CallbackMerger.Mod = CallbackMerger.Mod or RegisterMod("Callback Merger", 1)
 ----------------------------
 -- callback type handling --
 ----------------------------
+
+--CallbackMerger.CallbackReturnFilters--
 -- 0 = ignore all
 -- 1 = dont ignore anything
 -- 2 = ignore true for returning
 -- 3 = ignore false for returning
-CallbackMerger.CallbackReturnFilters = {
+CallbackMerger.CallbackReturnFilters = CallbackMerger.CallbackReturnFilters or {}
 
-	[ModCallbacks.MC_USE_ITEM] = 3,
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_USE_ITEM] = 3
 
-	--these callbacks can only be used once in the base game
-	[ModCallbacks.MC_PRE_FAMILIAR_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_NPC_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_PLAYER_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_PICKUP_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_TEAR_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_PROJECTILE_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_KNIFE_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_BOMB_COLLISION] = 1,
-	[ModCallbacks.MC_PRE_NPC_UPDATE] = 3,
-	[ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD] = 3,
+--these callbacks can only be used once in the base game
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_FAMILIAR_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_NPC_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_PLAYER_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_PICKUP_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_TEAR_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_PROJECTILE_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_KNIFE_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_BOMB_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_NPC_UPDATE] = 3
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD] = 3
+
+
+--CallbackMerger.CallbackReturnPreventions--
+-- 0 = later callbacks happen regardless of what returns
+-- 1 = returning anything prevents later callbacks
+-- 2 = true prevents later callbacks
+-- 3 = false prevents later callbacks
+CallbackMerger.CallbackReturnPreventions = CallbackMerger.CallbackReturnPreventions or {}
 	
-	--once one of these callbacks return, later callbacks never get called in the base game
-	[ModCallbacks.MC_ENTITY_TAKE_DMG] = 2,
-	[ModCallbacks.MC_PRE_USE_ITEM] = 3
-	
-}
+CallbackMerger.CallbackReturnPreventions[ModCallbacks.MC_ENTITY_TAKE_DMG] = 3
+CallbackMerger.CallbackReturnPreventions[ModCallbacks.MC_PRE_USE_ITEM] = 2
+CallbackMerger.CallbackReturnPreventions[ModCallbacks.MC_PRE_NPC_UPDATE] = 2
+CallbackMerger.CallbackReturnPreventions[ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD] = 2
 
+--these callbacks can only be used once in the base game, we're going to make it so returning nil allows later callbacks
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_FAMILIAR_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_NPC_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_PLAYER_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_PICKUP_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_TEAR_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_PROJECTILE_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_KNIFE_COLLISION] = 1
+CallbackMerger.CallbackReturnFilters[ModCallbacks.MC_PRE_BOMB_COLLISION] = 1
+
+
+--CallbackMerger.CallbackReturnToArg--
 -- number corresponds to the arg to replace with previous callbacks' return values for later callbacks
 -- table containing numbers will replace multiple args using values from replaced tables at those indexes
-CallbackMerger.CallbackReturnToArg = {
+CallbackMerger.CallbackReturnToArg = CallbackMerger.CallbackReturnToArg or {}
 
-	[ModCallbacks.MC_POST_CURSE_EVAL] = 1, --return value is the curse bitmask
-	[ModCallbacks.MC_POST_PICKUP_SELECTION] = {2,3}, --return values are entity variant and subtype
-	
-	--these callbacks only let the first return do something in the base game
-	[ModCallbacks.MC_PRE_ENTITY_SPAWN] = {1,2,3,7}, --return values are entity type, variant, subtype, and seed
-	[ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN] = {1,2,3}, --return values are entity type, variant, and subtype
-	
-	--these callbacks dont do this in the base game
-	[ModCallbacks.MC_GET_CARD] = 2, --return value is card id
-	[ModCallbacks.MC_POST_GET_COLLECTIBLE] = 1, --return value is item id
-	[ModCallbacks.MC_GET_PILL_EFFECT] = 1, --return value is pill effect id
-	[ModCallbacks.MC_GET_TRINKET] = 1 --return value is trinket id
-	
-}
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_POST_CURSE_EVAL] = 1 --return value is the curse bitmask
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_POST_PICKUP_SELECTION] = {2,3} --return values are entity variant and subtype
+
+--these callbacks only let the first return do something in the base game
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_PRE_ENTITY_SPAWN] = {1,2,3,7} --return values are entity type, variant, subtype, and seed
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_PRE_ROOM_ENTITY_SPAWN] = {1,2,3} --return values are entity type, variant, and subtype
+
+--these callbacks dont do this in the base game
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_GET_CARD] = 2 --return value is card id
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_POST_GET_COLLECTIBLE] = 1 --return value is item id
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_GET_PILL_EFFECT] = 1 --return value is pill effect id
+CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_GET_TRINKET] = 1 --return value is trinket id
 
 
 -----------------
@@ -199,12 +236,146 @@ function CallbackMerger.RegisterMod(mod, modname, apiversion)
 end
 Isaac.RegisterMod = CallbackMerger.RegisterMod
 
-
 -----------------
 -- addcallback --
 -----------------
 --override AddCallback to handle merging of callbacks
 CallbackMerger.OldAddCallback = CallbackMerger.OldAddCallback or Isaac.AddCallback
+function CallbackMerger.CreateMergedCallback(callbackId, extraVar)
+
+	CallbackMerger.CondensedCallbacks[callbackId] = CallbackMerger.CondensedCallbacks[callbackId] or {}
+	
+	local functionExistedAlready = false
+	if CallbackMerger.CondensedCallbacks[callbackId][extraVar] then
+		functionExistedAlready = true
+	end
+
+	CallbackMerger.CondensedCallbacks[callbackId][extraVar] = function(_, ...)
+	
+		local args = {...}
+		local toReturn = nil
+		
+		local ignoreTrueReturn = false
+		local ignoreFalseReturn = false
+		
+		local returnAtTrueReturn = false
+		local returnAtFalseReturn = false
+		
+		if CallbackMerger.CallbackReturnFilters[callbackId] then
+		
+			-- 0 = ignore all
+			-- 1 = dont ignore anything
+			-- 2 = ignore true for returning
+			-- 3 = ignore false for returning
+			ignoreTrueReturn = CallbackMerger.CallbackReturnFilters[callbackId] == 0 or CallbackMerger.CallbackReturnFilters[callbackId] == 2
+			ignoreFalseReturn = CallbackMerger.CallbackReturnFilters[callbackId] == 0 or CallbackMerger.CallbackReturnFilters[callbackId] == 3
+		
+		end
+		
+		if CallbackMerger.CallbackReturnPreventions[callbackId] then
+		
+			-- 0 = later callbacks happen regardless of what returns
+			-- 1 = returning anything prevents later callbacks
+			-- 2 = true prevents later callbacks
+			-- 3 = false prevents later callbacks
+			returnAtTrueReturn = CallbackMerger.CallbackReturnPreventions[callbackId] == 1 or CallbackMerger.CallbackReturnPreventions[callbackId] == 2
+			returnAtFalseReturn = CallbackMerger.CallbackReturnPreventions[callbackId] == 1 or CallbackMerger.CallbackReturnPreventions[callbackId] == 3
+		
+		end
+		
+		local returnToArg = CallbackMerger.CallbackReturnToArg[callbackId]
+	
+		if CallbackMerger.Callbacks[callbackId] then
+		
+			for _, callbackData in ipairs(CallbackMerger.Callbacks[callbackId]) do
+			
+				local dataMod = callbackData[1]
+				local dataFunction = callbackData[2]
+				local dataExtraVar = callbackData[3]
+			
+				if extraVar == dataExtraVar then
+		
+					--pcall to catch any errors
+					local noErrors, returned = pcall(dataFunction, dataMod, table.unpack(args))
+					
+					if not noErrors then
+					
+						error("[" .. tostring(dataMod.Name) .. "] " .. returned, 2)
+					
+					--callback passed with no errors
+					elseif type(returned) ~= "nil" then
+					
+						local doReturn = true
+						
+						if type(returned) == "boolean" then
+							
+							--ignore true if we should
+							if returned and ignoreTrueReturn then
+								doReturn = false
+							end
+							
+							--ignore false if we should
+							if not returned and ignoreFalseReturn then
+								doReturn = false
+							end
+							
+						end
+					
+						if doReturn then
+						
+							toReturn = returned
+							
+							--set the args to values which were returned
+							if returnToArg then
+							
+								if type(returnToArg) == "number" and type(returned) == "number" then
+									args[returnToArg] = returned
+								end
+							
+								if type(returnToArg) == "table" and type(returned) == "table" then
+								
+									for _,argindex in ipairs(returnToArg) do
+									
+										if returned[argindex] then
+											args[argindex] = returned[argindex]
+										end
+										
+									end
+									
+								end
+								
+							end
+							
+							--prevent later callbacks from happening if we should
+							if (toReturn == true and returnAtTrueReturn == true)
+							or (toReturn == false and returnAtFalseReturn == true) then
+								
+								break
+								
+							end
+							
+						end
+						
+					end
+					
+				end
+			
+			end
+			
+		end
+		
+		return toReturn
+	
+	end
+	
+	if not functionExistedAlready then
+	
+		CallbackMerger.OldAddCallback(CallbackMerger.Mod, callbackId, CallbackMerger.CondensedCallbacks[callbackId][extraVar], extraVar)
+		
+	end
+
+end
+
 function CallbackMerger.AddCallback(mod, callbackId, fn, extraVar)
 	
 	--force undefined/non-number extra vars to -1
@@ -252,121 +423,7 @@ function CallbackMerger.AddCallback(mod, callbackId, fn, extraVar)
 	CallbackMerger.CondensedCallbacks[callbackId] = CallbackMerger.CondensedCallbacks[callbackId] or {}
 	if not CallbackMerger.CondensedCallbacks[callbackId][extraVar] then
 	
-		CallbackMerger.CondensedCallbacks[callbackId][extraVar] = function(_, ...)
-		
-			local args = {...}
-			local toReturn = nil
-			
-			local ignoreTrueReturn = false
-			local ignoreFalseReturn = false
-			
-			if CallbackMerger.CallbackReturnFilters[callbackId] then
-			
-				-- 0 = ignore all
-				-- 1 = dont ignore anything
-				-- 2 = ignore true for returning
-				-- 3 = ignore false for returning
-				if CallbackMerger.CallbackReturnFilters[callbackId] == 0 then
-					ignoreTrueReturn = true
-					ignoreFalseReturn = true
-				elseif CallbackMerger.CallbackReturnFilters[callbackId] == 1 then
-					ignoreTrueReturn = false
-					ignoreFalseReturn = false
-				elseif CallbackMerger.CallbackReturnFilters[callbackId] == 2 then
-					ignoreTrueReturn = true
-					ignoreFalseReturn = false
-				elseif CallbackMerger.CallbackReturnFilters[callbackId] == 3 then
-					ignoreTrueReturn = false
-					ignoreFalseReturn = true
-				end
-			
-			end
-			
-			local returnToArg = CallbackMerger.CallbackReturnToArg[callbackId]
-		
-			if CallbackMerger.Callbacks[callbackId] then
-			
-				for _, callbackData in ipairs(CallbackMerger.Callbacks[callbackId]) do
-				
-					local dataMod = callbackData[1]
-					local dataFunction = callbackData[2]
-					local dataExtraVar = callbackData[3]
-				
-					if extraVar == dataExtraVar then
-					
-						for _, registeredMod in ipairs(CallbackMerger.RegisteredMods) do
-						
-							if registeredMod == dataMod then
-					
-								--pcall to catch any errors
-								local noErrors, returned = pcall(dataFunction, registeredMod, table.unpack(args))
-								
-								if not noErrors then
-								
-									error("[" .. tostring(dataMod.Name) .. "] " .. returned, 2)
-									
-								elseif type(returned) ~= "nil" then
-								
-									local doReturn = true
-									
-									if type(returned) == "boolean" then
-										
-										--ignore true if we should
-										if returned and ignoreTrueReturn then
-											doReturn = false
-										end
-										
-										--ignore false if we should
-										if not returned and ignoreFalseReturn then
-											doReturn = false
-										end
-										
-									end
-								
-									if doReturn then
-									
-										toReturn = returned
-										
-										--set the args to values which were returned
-										if returnToArg then
-										
-											if type(returnToArg) == "number" and type(returned) == "number" then
-												args[returnToArg] = returned
-											end
-										
-											if type(returnToArg) == "table" and type(returned) == "table" then
-											
-												for _,argindex in ipairs(returnToArg) do
-												
-													if returned[argindex] then
-														args[argindex] = returned[argindex]
-													end
-													
-												end
-												
-											end
-											
-										end
-										
-									end
-									
-								end
-							
-							end
-					
-						end
-						
-					end
-				
-				end
-				
-			end
-			
-			return toReturn
-		
-		end
-		
-		CallbackMerger.OldAddCallback(CallbackMerger.Mod, callbackId, CallbackMerger.CondensedCallbacks[callbackId][extraVar], extraVar)
+		CallbackMerger.CreateMergedCallback(callbackId, extraVar)
 		
 	end
 
@@ -414,6 +471,25 @@ function CallbackMerger.RemoveCallback(mod, callbackId, fn)
 
 end
 Isaac.RemoveCallback = CallbackMerger.RemoveCallback
+
+------------------------
+-- old version compat --
+------------------------
+if recreateCondensedCallbacks then
+	
+	for callbackId, _ in pairs(CallbackMerger.CondensedCallbacks) do
+	
+		CallbackMerger.CondensedCallbacks[callbackId] = CallbackMerger.CondensedCallbacks[callbackId] or {}
+		
+		for extraVar, _ in pairs(CallbackMerger.CondensedCallbacks[callbackId]) do
+			print(tostring(callbackId) .. " " .. tostring(extraVar))
+			CallbackMerger.CreateMergedCallback(callbackId, extraVar)
+			
+		end
+		
+	end
+	
+end
 
 ------------
 -- return --
