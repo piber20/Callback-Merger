@@ -5,9 +5,22 @@
     <id>2225956656</id>
     <description>This is a technical script for modders. However, subscribing to this as a regular user can be useful, as it can improve compatibility between mods.
 
+NOT NECESSARY IF A MOD INCLUDES THIS ALREADY!
+
+
+Technical info:
+
 This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
-It also fixes a few bugs and implements a few QOL changes to the callbacks</description>
-    <version>1.6</version>
+
+It also fixes a few bugs and implements a few QOL changes to the callbacks, including implementing an &quot;early&quot; and &quot;late&quot; callback system
+
+Early and Late callbacks always trigger before or after callbacks added normally respectively.
+Late callbacks recieve what the last normal callback returned as an argument, allowing detection of stuff like:
+   - if another mod prevented damage
+   - if another mod prevented an item use
+and more! This opens up a lot of possibilities and better intercompatibility between mods that make use of this feature.
+Early and late callbacks cannot return any values.</description>
+    <version>1.7</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
 </metadata>
