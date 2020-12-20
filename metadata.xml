@@ -20,7 +20,7 @@ Late callbacks recieve what the last normal callback returned as an argument, al
    - if another mod prevented an item use
 and more! This opens up a lot of possibilities and better intercompatibility between mods that make use of this feature.
 Early and late callbacks cannot return any values.</description>
-    <version>1.7</version>
+    <version>1.8</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
 </metadata>
