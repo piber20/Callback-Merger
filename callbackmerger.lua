@@ -1,7 +1,7 @@
 ---------------------
 -- CALLBACK MERGER --
 ---------------------
--- Version 5
+-- Version 6
 -- Created by piber
 
 -- This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
@@ -66,6 +66,10 @@
 --	number = corresponds to the arg to replace with previous callbacks' return values for later callbacks
 --	table  = will replace multiple args using number values from replaced tables at those indexes
 
+-- CallbackMerger.ExtendMod
+-- function(table mod)
+-- Modifies the mod table provided to add Callback Merger's functions to it.
+
 -- CallbackMerger.RegisterMod - Overrides Isaac.RegisterMod
 -- function(table mod, string mod name, number api version)
 -- No return value
@@ -117,7 +121,7 @@
 -------------
 -- version --
 -------------
-local fileVersion = 5
+local fileVersion = 6
 
 --prevent older/same version versions of this script from loading
 if CallbackMerger and CallbackMerger.Version >= fileVersion then
@@ -447,20 +451,11 @@ function CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, funcNa
 		
 	end
 
-	--check if the mod is already in the table
-	local modAlreadyRegistered = false
-	for i=1, #CallbackMerger.RegisteredMods do
-		
-		if CallbackMerger.RegisteredMods[i] == mod then
-			modAlreadyRegistered = true
-			break
-		end
-		
-	end
+	if type(mod) == "table" then
 	
-	--add mod to registered mods table
-	if not modAlreadyRegistered then
-		CallbackMerger.RegisteredMods[#CallbackMerger.RegisteredMods+1] = mod
+		--extend the mod
+		CallbackMerger.ExtendMod(mod)
+
 	end
 
 	--add the callback to the callbacks table
@@ -518,6 +513,13 @@ function CallbackMerger.RemoveCallbackFromTable(mod, callbackId, fn, funcName, c
 		
 	end
 	
+	if type(mod) == "table" then
+	
+		--extend the mod
+		CallbackMerger.ExtendMod(mod)
+
+	end
+	
 	--remove the callback from the callbacks table
 	if callbackTable[callbackId] then
 	
@@ -561,39 +563,27 @@ end
 -- registermod --
 -----------------
 
---override RegisterMod to catch registered mods and add new functions
-CallbackMerger.OldRegisterMod = CallbackMerger.OldRegisterMod or Isaac.RegisterMod
-function CallbackMerger.RegisterMod(mod, modname, apiversion)
-	
-	--call the old register mod function
-	--pcall to catch any errors
-	local modRegistered, returned = pcall(CallbackMerger.OldRegisterMod, mod, modname, apiversion)
-	
-	--erroring
-	if not modRegistered then
-	
-		returned = string.gsub(returned, "callbackmerger.OldRegisterMod", "RegisterMod")
-		error(returned, 2)
+function CallbackMerger.ExtendMod(mod)
+
+	--check if the mod is already in the table
+	local modAlreadyRegistered = false
+	for i=1, #CallbackMerger.RegisteredMods do
+		
+		if CallbackMerger.RegisteredMods[i] == mod then
+			modAlreadyRegistered = true
+			break
+		end
 		
 	end
 	
-	if type(mod) == "table" then
+	--add mod to registered mods table
+	if not modAlreadyRegistered then
+		CallbackMerger.RegisteredMods[#CallbackMerger.RegisteredMods+1] = mod
+	end
 	
-		--check if the mod is already in the table
-		local modAlreadyRegistered = false
-		for i=1, #CallbackMerger.RegisteredMods do
-			
-			if CallbackMerger.RegisteredMods[i] == mod then
-				modAlreadyRegistered = true
-				break
-			end
-			
-		end
+	if not mod.CallbackMergerExtended or mod.CallbackMergerExtended < fileVersion then
 		
-		--add mod to registered mods table
-		if not modAlreadyRegistered then
-			CallbackMerger.RegisteredMods[#CallbackMerger.RegisteredMods+1] = mod
-		end
+		mod.CallbackMergerExtended = fileVersion
 		
 		--AddEarlyCallback
 		mod.AddEarlyCallback = function(self, callbackId, fn, extraVar)
@@ -634,6 +624,31 @@ function CallbackMerger.RegisterMod(mod, modname, apiversion)
 			CallbackMerger.RemoveLateCallback(self, callbackId, fn)
 			
 		end
+	
+	end
+	
+end
+
+--override RegisterMod to catch registered mods and add new functions
+CallbackMerger.OldRegisterMod = CallbackMerger.OldRegisterMod or Isaac.RegisterMod
+function CallbackMerger.RegisterMod(mod, modname, apiversion)
+	
+	--call the old register mod function
+	--pcall to catch any errors
+	local modRegistered, returned = pcall(CallbackMerger.OldRegisterMod, mod, modname, apiversion)
+	
+	--erroring
+	if not modRegistered then
+	
+		returned = string.gsub(returned, "callbackmerger.OldRegisterMod", "RegisterMod")
+		error(returned, 2)
+		
+	end
+	
+	if type(mod) == "table" then
+	
+		--extend the mod
+		CallbackMerger.ExtendMod(mod)
 
 	end
 	
