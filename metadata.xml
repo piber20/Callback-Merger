@@ -15,12 +15,12 @@ This script merges all the callbacks registered by mods into a single one for ea
 It also fixes a few bugs and implements a few QOL changes to the callbacks, including implementing an &quot;early&quot; and &quot;late&quot; callback system
 
 Early and Late callbacks always trigger before or after callbacks added normally respectively.
-Late callbacks recieve what the last normal callback returned as an argument, allowing detection of stuff like:
+Late callbacks receive what the last normal callback returned as an argument, allowing detection of stuff like:
    - if another mod prevented damage
    - if another mod prevented an item use
 and more! This opens up a lot of possibilities and better intercompatibility between mods that make use of this feature.
 Early and late callbacks cannot return any values.</description>
-    <version>1.8</version>
+    <version>1.9</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
 </metadata>
