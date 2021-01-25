@@ -139,7 +139,7 @@
 -------------
 -- version --
 -------------
-local fileVersion = 7
+local fileVersion = 8
 
 --prevent older/same version versions of this script from loading
 if CallbackMerger and CallbackMerger.Version >= fileVersion then
@@ -246,6 +246,120 @@ CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_POST_GET_COLLECTIBLE] = 1 --r
 CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_GET_PILL_EFFECT] = 1 --return value is pill effect id
 CallbackMerger.CallbackReturnToArg[ModCallbacks.MC_GET_TRINKET] = 1 --return value is trinket id
 
+--CallbackMerger.CallbackCompareExtraVar--
+-- 0 = no comparison, all callbacks happen
+-- 1 = compares the extra var directly to the first arg
+-- 2 = compares the extra var directly to a GetPlayerType() call on the first arg
+-- 3 = compares the extra var directly to the .Type attribute on the first arg
+-- 4 = compares the extra var directly to the .Variant attribute on the first arg
+-- 5 = compares the extra var directly to the second arg
+CallbackMerger.CallbackCompareExtraVar = CallbackMerger.CallbackCompareExtraVar or {}
+
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_USE_ITEM] = 1
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_USE_CARD] = 1
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_USE_PILL] = 1
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_USE_ITEM] = 1
+
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PEFFECT_UPDATE] = 2
+
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_ENTITY_TAKE_DMG] = 3
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_NPC_INIT] = 3
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_NPC_RENDER] = 3
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_NPC_DEATH] = 3
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_NPC_COLLISION] = 3
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_ENTITY_REMOVE] = 3
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_ENTITY_KILL] = 3
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_NPC_UPDATE] = 3
+
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_FAMILIAR_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_FAMILIAR_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PLAYER_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_FAMILIAR_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_FAMILIAR_COLLISION] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PLAYER_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_PLAYER_COLLISION] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PICKUP_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PICKUP_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PICKUP_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_PICKUP_COLLISION] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_TEAR_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_TEAR_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_TEAR_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_TEAR_COLLISION] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PROJECTILE_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PROJECTILE_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PROJECTILE_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_PROJECTILE_COLLISION] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_LASER_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_LASER_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_LASER_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_KNIFE_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_KNIFE_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_KNIFE_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_KNIFE_COLLISION] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_EFFECT_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_EFFECT_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_EFFECT_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_BOMB_INIT] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_BOMB_UPDATE] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_BOMB_RENDER] = 4
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_BOMB_COLLISION] = 4
+
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_EVALUATE_CACHE] = 5
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_INPUT_ACTION] = 5
+
+
+
+	local callbacksCompareExtraVar = {
+		[ModCallbacks.MC_USE_ITEM] = true,
+		[ModCallbacks.MC_USE_CARD] = true,
+		[ModCallbacks.MC_USE_PILL] = true,
+		[ModCallbacks.MC_PRE_USE_ITEM] = true
+	}
+	local callbacksCompareTypeExtraVar = {
+		[ModCallbacks.MC_NPC_UPDATE] = true,
+		[ModCallbacks.MC_ENTITY_TAKE_DMG] = true,
+		[ModCallbacks.MC_POST_NPC_INIT] = true,
+		[ModCallbacks.MC_POST_NPC_RENDER] = true,
+		[ModCallbacks.MC_POST_NPC_DEATH] = true,
+		[ModCallbacks.MC_PRE_NPC_COLLISION] = true,
+		[ModCallbacks.MC_POST_ENTITY_REMOVE] = true,
+		[ModCallbacks.MC_POST_ENTITY_KILL] = true,
+		[ModCallbacks.MC_PRE_NPC_UPDATE] = true
+	}
+	local callbacksCompareVariantExtraVar = {
+		[ModCallbacks.MC_FAMILIAR_UPDATE] = true,
+		[ModCallbacks.MC_FAMILIAR_INIT] = true,
+		[ModCallbacks.MC_POST_FAMILIAR_RENDER] = true,
+		[ModCallbacks.MC_PRE_FAMILIAR_COLLISION] = true,
+		[ModCallbacks.MC_POST_PICKUP_INIT] = true,
+		[ModCallbacks.MC_POST_PICKUP_UPDATE] = true,
+		[ModCallbacks.MC_POST_PICKUP_RENDER] = true,
+		[ModCallbacks.MC_PRE_PICKUP_COLLISION] = true,
+		[ModCallbacks.MC_POST_TEAR_INIT] = true,
+		[ModCallbacks.MC_POST_TEAR_UPDATE] = true,
+		[ModCallbacks.MC_POST_TEAR_RENDER] = true,
+		[ModCallbacks.MC_PRE_TEAR_COLLISION] = true,
+		[ModCallbacks.MC_POST_PROJECTILE_INIT] = true,
+		[ModCallbacks.MC_POST_PROJECTILE_UPDATE] = true,
+		[ModCallbacks.MC_POST_PROJECTILE_RENDER] = true,
+		[ModCallbacks.MC_PRE_PROJECTILE_COLLISION] = true,
+		[ModCallbacks.MC_POST_LASER_INIT] = true,
+		[ModCallbacks.MC_POST_LASER_UPDATE] = true,
+		[ModCallbacks.MC_POST_LASER_RENDER] = true,
+		[ModCallbacks.MC_POST_KNIFE_INIT] = true,
+		[ModCallbacks.MC_POST_KNIFE_UPDATE] = true,
+		[ModCallbacks.MC_POST_KNIFE_RENDER] = true,
+		[ModCallbacks.MC_PRE_KNIFE_COLLISION] = true,
+		[ModCallbacks.MC_POST_EFFECT_INIT] = true,
+		[ModCallbacks.MC_POST_EFFECT_UPDATE] = true,
+		[ModCallbacks.MC_POST_EFFECT_RENDER] = true,
+		[ModCallbacks.MC_POST_BOMB_INIT] = true,
+		[ModCallbacks.MC_POST_BOMB_UPDATE] = true,
+		[ModCallbacks.MC_POST_BOMB_RENDER] = true,
+		[ModCallbacks.MC_PRE_BOMB_COLLISION] = true
+	}
+
 
 -----------------
 -- addcallback --
@@ -258,18 +372,18 @@ CallbackMerger.CondensedCallbacks = CallbackMerger.CondensedCallbacks or {}
 
 --override AddCallback to handle merging of callbacks
 CallbackMerger.OldAddCallback = CallbackMerger.OldAddCallback or Isaac.AddCallback
-function CallbackMerger.CreateMergedCallback(callbackId, extraVar)
-
-	CallbackMerger.CondensedCallbacks[callbackId] = CallbackMerger.CondensedCallbacks[callbackId] or {}
+function CallbackMerger.CreateMergedCallback(callbackId)
 	
 	local functionExistedAlready = false
-	if CallbackMerger.CondensedCallbacks[callbackId][extraVar] then
+	if CallbackMerger.CondensedCallbacks[callbackId] then
 		functionExistedAlready = true
 	end
 
-	CallbackMerger.CondensedCallbacks[callbackId][extraVar] = function(_, ...)
+	CallbackMerger.CondensedCallbacks[callbackId] = function(_, ...)
 	
 		local args = {...}
+		
+		local compareExtraVar = CallbackMerger.CallbackCompareExtraVar[callbackId]
 		
 		--EARLY CALLBACKS
 		if CallbackMerger.EarlyCallbacks[callbackId] then
@@ -279,8 +393,14 @@ function CallbackMerger.CreateMergedCallback(callbackId, extraVar)
 				local dataMod = callbackData[1]
 				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
-			
-				if extraVar == dataExtraVar then
+
+				if dataExtraVar == -1
+				or (not compareExtraVar or compareExtraVar == 0)
+				or (compareExtraVar == 1 and args[1] == dataExtraVar)
+				or (compareExtraVar == 2 and args[1]:GetPlayerType() == dataExtraVar)
+				or (compareExtraVar == 3 and args[1].Type == dataExtraVar)
+				or (compareExtraVar == 4 and args[1].Variant == dataExtraVar)
+				or (compareExtraVar == 5 and args[2] == dataExtraVar) then
 		
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, table.unpack(args))
@@ -336,9 +456,15 @@ function CallbackMerger.CreateMergedCallback(callbackId, extraVar)
 				local dataMod = callbackData[1]
 				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
-			
-				if extraVar == dataExtraVar then
-		
+
+				if dataExtraVar == -1
+				or (not compareExtraVar or compareExtraVar == 0)
+				or (compareExtraVar == 1 and args[1] == dataExtraVar)
+				or (compareExtraVar == 2 and args[1]:GetPlayerType() == dataExtraVar)
+				or (compareExtraVar == 3 and args[1].Type == dataExtraVar)
+				or (compareExtraVar == 4 and args[1].Variant == dataExtraVar)
+				or (compareExtraVar == 5 and args[2] == dataExtraVar) then
+				
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, table.unpack(args))
 					
@@ -417,7 +543,13 @@ function CallbackMerger.CreateMergedCallback(callbackId, extraVar)
 				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
 			
-				if extraVar == dataExtraVar then
+				if dataExtraVar == -1
+				or (not compareExtraVar or compareExtraVar == 0)
+				or (compareExtraVar == 1 and args[1] == dataExtraVar)
+				or (compareExtraVar == 2 and args[1]:GetPlayerType() == dataExtraVar)
+				or (compareExtraVar == 3 and args[1].Type == dataExtraVar)
+				or (compareExtraVar == 4 and args[1].Variant == dataExtraVar)
+				or (compareExtraVar == 5 and args[2] == dataExtraVar) then
 		
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, toReturn, table.unpack(args))
@@ -440,7 +572,7 @@ function CallbackMerger.CreateMergedCallback(callbackId, extraVar)
 	
 	if not functionExistedAlready then
 	
-		CallbackMerger.OldAddCallback(CallbackMerger.Mod, callbackId, CallbackMerger.CondensedCallbacks[callbackId][extraVar], extraVar)
+		CallbackMerger.OldAddCallback(CallbackMerger.Mod, callbackId, CallbackMerger.CondensedCallbacks[callbackId], -1)
 		
 	end
 
@@ -481,10 +613,9 @@ function CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, funcNa
 	table.insert(callbackTable[callbackId], {mod, fn, extraVar})
 	
 	--create a callback for the callback merger mod if it doesnt already exist
-	CallbackMerger.CondensedCallbacks[callbackId] = CallbackMerger.CondensedCallbacks[callbackId] or {}
-	if not CallbackMerger.CondensedCallbacks[callbackId][extraVar] then
+	if not CallbackMerger.CondensedCallbacks[callbackId] then
 	
-		CallbackMerger.CreateMergedCallback(callbackId, extraVar)
+		CallbackMerger.CreateMergedCallback(callbackId)
 		
 	end
 
@@ -747,13 +878,7 @@ if recreateCondensedCallbacks then
 	
 	for callbackId, _ in pairs(CallbackMerger.CondensedCallbacks) do
 	
-		CallbackMerger.CondensedCallbacks[callbackId] = CallbackMerger.CondensedCallbacks[callbackId] or {}
-		
-		for extraVar, _ in pairs(CallbackMerger.CondensedCallbacks[callbackId]) do
-			print(tostring(callbackId) .. " " .. tostring(extraVar))
-			CallbackMerger.CreateMergedCallback(callbackId, extraVar)
-			
-		end
+		CallbackMerger.CreateMergedCallback(callbackId)
 		
 	end
 	
