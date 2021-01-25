@@ -3,9 +3,9 @@
     <name>!!!!! Callback Merger</name>
     <directory>!!!!! callback merger</directory>
     <id>2225956656</id>
-    <description>This is a technical script for modders. However, subscribing to this as a regular user can be useful, as it can improve compatibility between mods.
+    <description>This is a technical script for modders. However, subscribing to this as a regular user can be useful, as it can improve compatibility between mods which dont have this bundled
 
-NOT NECESSARY IF A MOD INCLUDES THIS ALREADY!
+NOT NECESSARY IF A MOD AT A HIGH POINT IN THE MOD LIST INCLUDES THIS ALREADY!
 
 
 Technical info:
@@ -28,7 +28,7 @@ https://discord.com/invite/uJEFFdb
 
 Support me on patreon!
 https://www.patreon.com/piber20</description>
-    <version>1.10</version>
+    <version>1.11</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
 </metadata>
