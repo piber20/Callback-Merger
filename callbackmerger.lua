@@ -1,7 +1,7 @@
 ---------------------
 -- CALLBACK MERGER --
 ---------------------
--- Version 8
+-- Version 9
 -- Created by piber
 
 -- This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
@@ -139,7 +139,7 @@
 -------------
 -- version --
 -------------
-local fileVersion = 8
+local fileVersion = 9
 
 --prevent older/same version versions of this script from loading
 if CallbackMerger and CallbackMerger.Version >= fileVersion then
@@ -262,6 +262,7 @@ CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_USE_ITEM] = 1
 
 CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_PEFFECT_UPDATE] = 2
 
+CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_NPC_UPDATE] = 3
 CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_ENTITY_TAKE_DMG] = 3
 CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_NPC_INIT] = 3
 CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_POST_NPC_RENDER] = 3
