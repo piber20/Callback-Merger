@@ -10,7 +10,7 @@ NOT NECESSARY IF A MOD AT A HIGH POINT IN THE MOD LIST INCLUDES THIS ALREADY!
 
 Technical info:
 
-This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
+This script merges all the callbacks registered by mods into a single one for each callback type. This fixes callbacks that wouldn't let later callbacks work.
 
 It also fixes a few bugs and implements a few QOL changes to the callbacks, including implementing an &quot;early&quot; and &quot;late&quot; callback system
 
@@ -28,7 +28,7 @@ https://discord.com/invite/uJEFFdb
 
 Support me on patreon!
 https://www.patreon.com/piber20</description>
-    <version>1.13</version>
+    <version>1.14</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
 </metadata>
