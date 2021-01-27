@@ -647,42 +647,58 @@ end
 CallbackMerger.OldRemoveCallback = CallbackMerger.OldRemoveCallback or Isaac.RemoveCallback
 function CallbackMerger.RemoveCallbackFromTable(mod, callbackId, fn, funcName, callbackTable)
 	
-	--error if no callback id was provided
-	if type(callbackId) ~= "number" then
+	if CallbackMerger.Blacklist[callbackId]
+	or not CallbackMerger.CallbackIdToString[callbackId]
+	or not CallbackMerger.Callbacks[callbackId]
+	or not CallbackMerger.EarlyCallbacks[callbackId]
+	or not CallbackMerger.LateCallbacks[callbackId] then
 	
-		error("bad argument #2 to '" .. funcName .. "' (number expected, got " .. type(callbackId) .. ")", 2)
+		local callbackRemoved, returned = pcall(CallbackMerger.OldRemoveCallback, mod, callbackId, fn)
 		
-	end
-	
-	--error if no function was provided
-	if type(fn) ~= "function" then
-	
-		error("bad argument #3 to '" .. funcName .. "' (function expected, got " .. type(fn) .. ")", 2)
+		if not callbackRemoved then
+			error(returned, 2)
+		end
 		
-	end
+	else
 	
-	if type(mod) == "table" then
-	
-		--extend the mod
-		CallbackMerger.ExtendMod(mod)
-
-	end
-	
-	--remove the callback from the callbacks table
-	if callbackTable[callbackId] then
-	
-		for i=#callbackTable[callbackId], 1, -1 do
+		--error if no callback id was provided
+		if type(callbackId) ~= "number" then
 		
-			local callbackData = callbackTable[callbackId][i]
-			
-			if callbackData[1] == mod and callbackData[2] == fn then
-			
-				table.remove(callbackTable[callbackId], i)
-			
-			end
+			error("bad argument #2 to '" .. funcName .. "' (number expected, got " .. type(callbackId) .. ")", 2)
 			
 		end
 		
+		--error if no function was provided
+		if type(fn) ~= "function" then
+		
+			error("bad argument #3 to '" .. funcName .. "' (function expected, got " .. type(fn) .. ")", 2)
+			
+		end
+		
+		if type(mod) == "table" then
+		
+			--extend the mod
+			CallbackMerger.ExtendMod(mod)
+
+		end
+		
+		--remove the callback from the callbacks table
+		if callbackTable[callbackId] then
+		
+			for i=#callbackTable[callbackId], 1, -1 do
+			
+				local callbackData = callbackTable[callbackId][i]
+				
+				if callbackData[1] == mod and callbackData[2] == fn then
+				
+					table.remove(callbackTable[callbackId], i)
+				
+				end
+				
+			end
+			
+		end
+	
 	end
 
 end
