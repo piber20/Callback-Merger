@@ -4,7 +4,7 @@
 -- Version 9
 -- Created by piber
 
--- This script merges all the callbacks registered by mods into a single one for each callback type and extra variable, possibly improving performance, but more importantly, fixing callbacks that wouldn't let later callbacks work.
+-- This script merges all the callbacks registered by mods into a single one for each callback type, fixing callbacks that wouldn't let later callbacks work.
 -- It also fixes a few bugs and implements a few QOL changes to the callbacks, including implementing an "early" and "late" callback system
 
 -- Overrides 'Isaac.RegisterMod', 'Isaac.AddCallback', and 'Isaac.RemoveCallback'. Compatibility may be sketchy but could still work.
@@ -86,11 +86,13 @@
 -- function(table mod, number callback id, function, extra variable)
 -- No return value
 -- Facilitates creation of early callbacks in CallbackMerger.EarlyCallbacks
+-- Doesn't work with RENDER or INPUT_ACTION callbacks
 
 -- CallbackMerger.AddLateCallback - Can be accessed through mod:AddLateCallback
 -- function(table mod, number callback id, function, extra variable)
 -- No return value
 -- Facilitates creation of late callbacks in CallbackMerger.LateCallbacks
+-- Doesn't work with RENDER or INPUT_ACTION callbacks
 
 -- CallbackMerger.RemoveCallback - Overrides Isaac.RemoveCallback
 -- function(table mod, number callback id, function)
@@ -309,57 +311,27 @@ CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_PRE_BOMB_COLLISION] = 4
 CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_EVALUATE_CACHE] = 5
 CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_INPUT_ACTION] = 5
 
+-- CallbackMerger.Blacklist
+--these callbacks will not be merged, for performance reasons
+CallbackMerger.Blacklist = CallbackMerger.Blacklist or {}
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_UPDATE] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_INPUT_ACTION] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_LEVEL_GENERATOR] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_NPC_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_PLAYER_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_PICKUP_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_TEAR_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_PROJECTILE_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_LASER_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_KNIFE_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_EFFECT_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_BOMB_RENDER] = true
 
-
-	local callbacksCompareExtraVar = {
-		[ModCallbacks.MC_USE_ITEM] = true,
-		[ModCallbacks.MC_USE_CARD] = true,
-		[ModCallbacks.MC_USE_PILL] = true,
-		[ModCallbacks.MC_PRE_USE_ITEM] = true
-	}
-	local callbacksCompareTypeExtraVar = {
-		[ModCallbacks.MC_NPC_UPDATE] = true,
-		[ModCallbacks.MC_ENTITY_TAKE_DMG] = true,
-		[ModCallbacks.MC_POST_NPC_INIT] = true,
-		[ModCallbacks.MC_POST_NPC_RENDER] = true,
-		[ModCallbacks.MC_POST_NPC_DEATH] = true,
-		[ModCallbacks.MC_PRE_NPC_COLLISION] = true,
-		[ModCallbacks.MC_POST_ENTITY_REMOVE] = true,
-		[ModCallbacks.MC_POST_ENTITY_KILL] = true,
-		[ModCallbacks.MC_PRE_NPC_UPDATE] = true
-	}
-	local callbacksCompareVariantExtraVar = {
-		[ModCallbacks.MC_FAMILIAR_UPDATE] = true,
-		[ModCallbacks.MC_FAMILIAR_INIT] = true,
-		[ModCallbacks.MC_POST_FAMILIAR_RENDER] = true,
-		[ModCallbacks.MC_PRE_FAMILIAR_COLLISION] = true,
-		[ModCallbacks.MC_POST_PICKUP_INIT] = true,
-		[ModCallbacks.MC_POST_PICKUP_UPDATE] = true,
-		[ModCallbacks.MC_POST_PICKUP_RENDER] = true,
-		[ModCallbacks.MC_PRE_PICKUP_COLLISION] = true,
-		[ModCallbacks.MC_POST_TEAR_INIT] = true,
-		[ModCallbacks.MC_POST_TEAR_UPDATE] = true,
-		[ModCallbacks.MC_POST_TEAR_RENDER] = true,
-		[ModCallbacks.MC_PRE_TEAR_COLLISION] = true,
-		[ModCallbacks.MC_POST_PROJECTILE_INIT] = true,
-		[ModCallbacks.MC_POST_PROJECTILE_UPDATE] = true,
-		[ModCallbacks.MC_POST_PROJECTILE_RENDER] = true,
-		[ModCallbacks.MC_PRE_PROJECTILE_COLLISION] = true,
-		[ModCallbacks.MC_POST_LASER_INIT] = true,
-		[ModCallbacks.MC_POST_LASER_UPDATE] = true,
-		[ModCallbacks.MC_POST_LASER_RENDER] = true,
-		[ModCallbacks.MC_POST_KNIFE_INIT] = true,
-		[ModCallbacks.MC_POST_KNIFE_UPDATE] = true,
-		[ModCallbacks.MC_POST_KNIFE_RENDER] = true,
-		[ModCallbacks.MC_PRE_KNIFE_COLLISION] = true,
-		[ModCallbacks.MC_POST_EFFECT_INIT] = true,
-		[ModCallbacks.MC_POST_EFFECT_UPDATE] = true,
-		[ModCallbacks.MC_POST_EFFECT_RENDER] = true,
-		[ModCallbacks.MC_POST_BOMB_INIT] = true,
-		[ModCallbacks.MC_POST_BOMB_UPDATE] = true,
-		[ModCallbacks.MC_POST_BOMB_RENDER] = true,
-		[ModCallbacks.MC_PRE_BOMB_COLLISION] = true
-	}
+CallbackMerger.CallbackIdToString = CallbackMerger.CallbackIdToString or {}
+for callbackName, callbackId in pairs(ModCallbacks) do
+	CallbackMerger.CallbackIdToString[callbackId] = callbackName
+end
 
 
 -----------------
@@ -579,45 +551,67 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 
 end
 
-function CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, funcName, callbackTable)
+function CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, funcName, callbackTable, warn)
 	
-	--force undefined/non-number extra vars to -1
-	if type(extraVar) ~= "number" then
+	if CallbackMerger.Blacklist[callbackId] or not CallbackMerger.CallbackIdToString[callbackId] then
 	
-		extraVar = -1
+		local callbackAdded, returned = pcall(CallbackMerger.OldAddCallback, mod, callbackId, fn, extraVar)
 		
-	end
-
-	--error if no callback id was provided
-	if type(callbackId) ~= "number" then
-	
-		error("bad argument #2 to '" .. funcName .. "' (number expected, got " .. type(callbackId) .. ")", 2)
+		if callbackAdded then
 		
-	end
-	
-	--error if no function was provided
-	if type(fn) ~= "function" then
-	
-		error("bad argument #3 to '" .. funcName .. "' (function expected, got " .. type(fn) .. ")", 2)
+			if warn then
+			
+				local fullWarning = "[" .. tostring(mod.Name) .. "] Added " .. CallbackMerger.CallbackIdToString[callbackId] .. " callback as a regular callback - cannot be added as an " .. warn .. " callback!"
+				Isaac.DebugString(fullWarning)
+				print(fullWarning)
+			
+			end
 		
-	end
-
-	if type(mod) == "table" then
-	
-		--extend the mod
-		CallbackMerger.ExtendMod(mod)
-
-	end
-
-	--add the callback to the callbacks table
-	callbackTable[callbackId] = callbackTable[callbackId] or {}
-	table.insert(callbackTable[callbackId], {mod, fn, extraVar})
-	
-	--create a callback for the callback merger mod if it doesnt already exist
-	if not CallbackMerger.CondensedCallbacks[callbackId] then
-	
-		CallbackMerger.CreateMergedCallback(callbackId)
+		else
+			error(returned, 2)
+		end
 		
+	else
+	
+		--force undefined/non-number extra vars to -1
+		if type(extraVar) ~= "number" then
+		
+			extraVar = -1
+			
+		end
+
+		--error if no callback id was provided
+		if type(callbackId) ~= "number" then
+		
+			error("bad argument #2 to '" .. funcName .. "' (number expected, got " .. type(callbackId) .. ")", 2)
+			
+		end
+		
+		--error if no function was provided
+		if type(fn) ~= "function" then
+		
+			error("bad argument #3 to '" .. funcName .. "' (function expected, got " .. type(fn) .. ")", 2)
+			
+		end
+
+		if type(mod) == "table" then
+		
+			--extend the mod
+			CallbackMerger.ExtendMod(mod)
+
+		end
+
+		--add the callback to the callbacks table
+		callbackTable[callbackId] = callbackTable[callbackId] or {}
+		table.insert(callbackTable[callbackId], {mod, fn, extraVar})
+		
+		--create a callback for the callback merger mod if it doesnt already exist
+		if not CallbackMerger.CondensedCallbacks[callbackId] then
+		
+			CallbackMerger.CreateMergedCallback(callbackId)
+			
+		end
+	
 	end
 
 end
@@ -631,13 +625,13 @@ Isaac.AddCallback = CallbackMerger.AddCallback
 
 function CallbackMerger.AddEarlyCallback(mod, callbackId, fn, extraVar)
 	
-	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddEarlyCallback", CallbackMerger.EarlyCallbacks)
+	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddEarlyCallback", CallbackMerger.EarlyCallbacks, "early")
 
 end
 
 function CallbackMerger.AddLateCallback(mod, callbackId, fn, extraVar)
 	
-	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddLateCallback", CallbackMerger.LateCallbacks)
+	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddLateCallback", CallbackMerger.LateCallbacks, "late")
 
 end
 
