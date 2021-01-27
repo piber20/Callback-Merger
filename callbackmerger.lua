@@ -348,6 +348,14 @@ CallbackMerger.LateCallbacks = CallbackMerger.LateCallbacks or {}
 CallbackMerger.CondensedCallbacks = CallbackMerger.CondensedCallbacks or {}
 
 --override AddCallback to handle merging of callbacks
+local compareArgs = {
+	[0] = function(args, dataExtraVar) return true end,
+	[1] = function(args, dataExtraVar) return args[1] == dataExtraVar end,
+	[2] = function(args, dataExtraVar) return args[1]:GetPlayerType() == dataExtraVar end,
+	[3] = function(args, dataExtraVar) return args[1].Type == dataExtraVar end,
+	[4] = function(args, dataExtraVar) return args[1].Variant == dataExtraVar end,
+	[5] = function(args, dataExtraVar) return args[2] == dataExtraVar end
+}
 CallbackMerger.OldAddCallback = CallbackMerger.OldAddCallback or Isaac.AddCallback
 function CallbackMerger.CreateMergedCallback(callbackId)
 	
@@ -360,7 +368,9 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 	
 		local args = {...}
 		
-		local compareExtraVar = CallbackMerger.CallbackCompareExtraVar[callbackId]
+		local compareType = CallbackMerger.CallbackCompareExtraVar[callbackId]
+		local compareFunc = compareArgs[compareExtraVar] or compareArgs[0]
+		
 		
 		--EARLY CALLBACKS
 		if CallbackMerger.EarlyCallbacks[callbackId] then
@@ -371,13 +381,7 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
 
-				if dataExtraVar == -1
-				or (not compareExtraVar or compareExtraVar == 0)
-				or (compareExtraVar == 1 and args[1] == dataExtraVar)
-				or (compareExtraVar == 2 and args[1]:GetPlayerType() == dataExtraVar)
-				or (compareExtraVar == 3 and args[1].Type == dataExtraVar)
-				or (compareExtraVar == 4 and args[1].Variant == dataExtraVar)
-				or (compareExtraVar == 5 and args[2] == dataExtraVar) then
+				if dataExtraVar == -1 or compareFunc(args, dataExtraVar) then
 		
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, table.unpack(args))
@@ -434,13 +438,7 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
 
-				if dataExtraVar == -1
-				or (not compareExtraVar or compareExtraVar == 0)
-				or (compareExtraVar == 1 and args[1] == dataExtraVar)
-				or (compareExtraVar == 2 and args[1]:GetPlayerType() == dataExtraVar)
-				or (compareExtraVar == 3 and args[1].Type == dataExtraVar)
-				or (compareExtraVar == 4 and args[1].Variant == dataExtraVar)
-				or (compareExtraVar == 5 and args[2] == dataExtraVar) then
+				if dataExtraVar == -1 or compareFunc(args, dataExtraVar) then
 				
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, table.unpack(args))
@@ -520,13 +518,7 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
 			
-				if dataExtraVar == -1
-				or (not compareExtraVar or compareExtraVar == 0)
-				or (compareExtraVar == 1 and args[1] == dataExtraVar)
-				or (compareExtraVar == 2 and args[1]:GetPlayerType() == dataExtraVar)
-				or (compareExtraVar == 3 and args[1].Type == dataExtraVar)
-				or (compareExtraVar == 4 and args[1].Variant == dataExtraVar)
-				or (compareExtraVar == 5 and args[2] == dataExtraVar) then
+				if dataExtraVar == -1 or compareFunc(args, dataExtraVar) then
 		
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, toReturn, table.unpack(args))
