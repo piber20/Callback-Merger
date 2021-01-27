@@ -1,7 +1,7 @@
 ---------------------
 -- CALLBACK MERGER --
 ---------------------
--- Version 9
+-- Version 10
 -- Created by piber
 
 -- This script merges all the callbacks registered by mods into a single one for each callback type, fixing callbacks that wouldn't let later callbacks work.
@@ -141,7 +141,7 @@
 -------------
 -- version --
 -------------
-local fileVersion = 9
+local fileVersion = 10
 
 --prevent older/same version versions of this script from loading
 if CallbackMerger and CallbackMerger.Version >= fileVersion then
@@ -151,6 +151,7 @@ if CallbackMerger and CallbackMerger.Version >= fileVersion then
 end
 
 local recreateCondensedCallbacks = false
+local removeBlacklistCallbacks = false
 if not CallbackMerger then
 
 	CallbackMerger = {}
@@ -161,6 +162,9 @@ elseif CallbackMerger.Version < fileVersion then
 	local oldVersion = CallbackMerger.Version
 	
 	-- handle old versions
+	if oldVersion < 10 then
+		removeBlacklistCallbacks = true
+	end
 	if oldVersion < 5 then
 	
 		--replace the condensed callbacks functions with new ones if some were created
@@ -869,6 +873,62 @@ Isaac.RegisterMod = CallbackMerger.RegisterMod
 ------------------------
 -- old version compat --
 ------------------------
+if removeBlacklistCallbacks then
+
+	for callbackId, callbackFunc in pairs(CallbackMerger.CondensedCallbacks) do
+	
+		if CallbackMerger.Blacklist[callbackId] or not CallbackMerger.CallbackIdToString[callbackId] then
+			CallbackMerger.OldRemoveCallback(CallbackMerger.Mod, callbackId, callbackFunc)
+		end
+	
+		CallbackMerger.CondensedCallbacks[callbackId] = nil
+		
+		if CallbackMerger.EarlyCallbacks[callbackId] then
+		
+			for _, callbackData in ipairs(CallbackMerger.EarlyCallbacks[callbackId]) do
+			
+				local dataMod = callbackData[1]
+				local dataFunction = callbackData[2]
+				local dataExtraVar = callbackData[3]
+				
+				CallbackMerger.OldAddCallback(dataMod, callbackId, dataFunction, dataExtraVar)
+				
+			end
+			
+		end
+		
+		if CallbackMerger.Callbacks[callbackId] then
+		
+			for _, callbackData in ipairs(CallbackMerger.Callbacks[callbackId]) do
+			
+				local dataMod = callbackData[1]
+				local dataFunction = callbackData[2]
+				local dataExtraVar = callbackData[3]
+				
+				CallbackMerger.OldAddCallback(dataMod, callbackId, dataFunction, dataExtraVar)
+				
+			end
+			
+		end
+		
+		if CallbackMerger.LateCallbacks[callbackId] then
+		
+			for _, callbackData in ipairs(CallbackMerger.LateCallbacks[callbackId]) do
+			
+				local dataMod = callbackData[1]
+				local dataFunction = callbackData[2]
+				local dataExtraVar = callbackData[3]
+				
+				CallbackMerger.OldAddCallback(dataMod, callbackId, dataFunction, dataExtraVar)
+				
+			end
+			
+		end
+		
+	end
+	
+end
+
 if recreateCondensedCallbacks then
 	
 	for callbackId, _ in pairs(CallbackMerger.CondensedCallbacks) do
