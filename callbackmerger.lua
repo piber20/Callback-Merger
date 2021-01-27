@@ -318,18 +318,29 @@ CallbackMerger.CallbackCompareExtraVar[ModCallbacks.MC_INPUT_ACTION] = 5
 -- CallbackMerger.Blacklist
 --these callbacks will not be merged, for performance reasons
 CallbackMerger.Blacklist = CallbackMerger.Blacklist or {}
+CallbackMerger.Blacklist[ModCallbacks.MC_NPC_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_UPDATE] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_PEFFECT_UPDATE] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_FAMILIAR_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_RENDER] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_INPUT_ACTION] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_LEVEL_GENERATOR] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_NPC_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_PLAYER_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_PLAYER_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_PICKUP_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_PICKUP_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_TEAR_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_TEAR_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_PROJECTILE_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_PROJECTILE_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_LASER_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_LASER_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_KNIFE_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_KNIFE_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_EFFECT_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_EFFECT_RENDER] = true
+CallbackMerger.Blacklist[ModCallbacks.MC_POST_BOMB_UPDATE] = true
 CallbackMerger.Blacklist[ModCallbacks.MC_POST_BOMB_RENDER] = true
 
 CallbackMerger.CallbackIdToString = CallbackMerger.CallbackIdToString or {}
