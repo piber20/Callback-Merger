@@ -369,7 +369,7 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 		local args = {...}
 		
 		local compareType = CallbackMerger.CallbackCompareExtraVar[callbackId]
-		local compareFunc = compareArgs[compareExtraVar] or compareArgs[0]
+		local compareFunc = compareArgs[compareType] or compareArgs[0]
 		
 		
 		--EARLY CALLBACKS
