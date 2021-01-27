@@ -388,11 +388,11 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 		
 			for _, callbackData in ipairs(CallbackMerger.EarlyCallbacks[callbackId]) do
 			
-				local dataMod = callbackData[1]
-				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
-
 				if dataExtraVar == -1 or compareFunc(args, dataExtraVar) then
+				
+					local dataMod = callbackData[1]
+					local dataFunction = callbackData[2]
 		
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, table.unpack(args))
@@ -410,46 +410,47 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 		end
 		
 		--MAIN CALLBACKS (THESE CAN RETURN VALUES)
-		local ignoreTrueReturn = false
-		local ignoreFalseReturn = false
-		
-		if CallbackMerger.CallbackReturnFilters[callbackId] then
-		
-			-- 0 = ignore all
-			-- 1 = dont ignore anything
-			-- 2 = ignore true for returning
-			-- 3 = ignore false for returning
-			ignoreTrueReturn = CallbackMerger.CallbackReturnFilters[callbackId] == 0 or CallbackMerger.CallbackReturnFilters[callbackId] == 2
-			ignoreFalseReturn = CallbackMerger.CallbackReturnFilters[callbackId] == 0 or CallbackMerger.CallbackReturnFilters[callbackId] == 3
-		
-		end
-		
-		local returnAtTrueReturn = false
-		local returnAtFalseReturn = false
-		
-		if CallbackMerger.CallbackReturnPreventions[callbackId] then
-		
-			-- 0 = later callbacks happen regardless of what returns
-			-- 1 = returning anything prevents later callbacks
-			-- 2 = true prevents later callbacks
-			-- 3 = false prevents later callbacks
-			returnAtTrueReturn = CallbackMerger.CallbackReturnPreventions[callbackId] == 1 or CallbackMerger.CallbackReturnPreventions[callbackId] == 2
-			returnAtFalseReturn = CallbackMerger.CallbackReturnPreventions[callbackId] == 1 or CallbackMerger.CallbackReturnPreventions[callbackId] == 3
-		
-		end
-		
 		local toReturn = nil
-		local returnToArg = CallbackMerger.CallbackReturnToArg[callbackId]
-	
 		if CallbackMerger.Callbacks[callbackId] then
+			
+			local ignoreTrueReturn = false
+			local ignoreFalseReturn = false
+			
+			if CallbackMerger.CallbackReturnFilters[callbackId] then
+			
+				-- 0 = ignore all
+				-- 1 = dont ignore anything
+				-- 2 = ignore true for returning
+				-- 3 = ignore false for returning
+				ignoreTrueReturn = CallbackMerger.CallbackReturnFilters[callbackId] == 0 or CallbackMerger.CallbackReturnFilters[callbackId] == 2
+				ignoreFalseReturn = CallbackMerger.CallbackReturnFilters[callbackId] == 0 or CallbackMerger.CallbackReturnFilters[callbackId] == 3
+			
+			end
+			
+			local returnAtTrueReturn = false
+			local returnAtFalseReturn = false
+			
+			if CallbackMerger.CallbackReturnPreventions[callbackId] then
+			
+				-- 0 = later callbacks happen regardless of what returns
+				-- 1 = returning anything prevents later callbacks
+				-- 2 = true prevents later callbacks
+				-- 3 = false prevents later callbacks
+				returnAtTrueReturn = CallbackMerger.CallbackReturnPreventions[callbackId] == 1 or CallbackMerger.CallbackReturnPreventions[callbackId] == 2
+				returnAtFalseReturn = CallbackMerger.CallbackReturnPreventions[callbackId] == 1 or CallbackMerger.CallbackReturnPreventions[callbackId] == 3
+			
+			end
+			
+			local returnToArg = CallbackMerger.CallbackReturnToArg[callbackId]
 		
 			for _, callbackData in ipairs(CallbackMerger.Callbacks[callbackId]) do
 			
-				local dataMod = callbackData[1]
-				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
 
 				if dataExtraVar == -1 or compareFunc(args, dataExtraVar) then
+				
+					local dataMod = callbackData[1]
+					local dataFunction = callbackData[2]
 				
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, table.unpack(args))
@@ -525,11 +526,12 @@ function CallbackMerger.CreateMergedCallback(callbackId)
 		
 			for _, callbackData in ipairs(CallbackMerger.LateCallbacks[callbackId]) do
 			
-				local dataMod = callbackData[1]
-				local dataFunction = callbackData[2]
 				local dataExtraVar = callbackData[3]
 			
 				if dataExtraVar == -1 or compareFunc(args, dataExtraVar) then
+				
+					local dataMod = callbackData[1]
+					local dataFunction = callbackData[2]
 		
 					--pcall to catch any errors
 					local noErrors, returned = pcall(dataFunction, dataMod, toReturn, table.unpack(args))
@@ -568,7 +570,7 @@ function CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, funcNa
 		
 			if warn then
 			
-				local fullWarning = "[" .. tostring(mod.Name) .. "] Added " .. CallbackMerger.CallbackIdToString[callbackId] .. " callback as a regular callback - cannot be added as an " .. warn .. " callback!"
+				local fullWarning = "[" .. tostring(mod.Name) .. "] Added " .. CallbackMerger.CallbackIdToString[callbackId] .. " callback as a regular callback - cannot be added as a" .. warn .. " callback!"
 				Isaac.DebugString(fullWarning)
 				print(fullWarning)
 			
@@ -632,13 +634,13 @@ Isaac.AddCallback = CallbackMerger.AddCallback
 
 function CallbackMerger.AddEarlyCallback(mod, callbackId, fn, extraVar)
 	
-	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddEarlyCallback", CallbackMerger.EarlyCallbacks, "early")
+	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddEarlyCallback", CallbackMerger.EarlyCallbacks, "n early")
 
 end
 
 function CallbackMerger.AddLateCallback(mod, callbackId, fn, extraVar)
 	
-	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddLateCallback", CallbackMerger.LateCallbacks, "late")
+	CallbackMerger.AddCallbackToTable(mod, callbackId, fn, extraVar, "AddLateCallback", CallbackMerger.LateCallbacks, " late")
 
 end
 
